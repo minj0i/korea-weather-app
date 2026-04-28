@@ -21,23 +21,23 @@ export interface WeatherResult {
   hourly: HourlyWeather;
 }
 
-// WMO 날씨 코드 → 한국어 + 아이콘
-export const WMO_CODES: Record<number, { label: string; icon: string }> = {
-  0:  { label: '맑음',         icon: '☀️' },
-  1:  { label: '대체로 맑음',   icon: '🌤' },
-  2:  { label: '부분적 흐림',   icon: '⛅️' },
-  3:  { label: '흐림',         icon: '☁️' },
-  45: { label: '안개',         icon: '🌫' },
-  48: { label: '결빙 안개',     icon: '🌫' },
-  51: { label: '가벼운 이슬비', icon: '🌦' },
-  61: { label: '약한 비',      icon: '🌧' },
-  63: { label: '비',           icon: '🌧' },
-  65: { label: '강한 비',      icon: '⛈' },
-  71: { label: '약한 눈',      icon: '🌨' },
-  73: { label: '눈',           icon: '❄️' },
-  75: { label: '강한 눈',      icon: '❄️' },
-  80: { label: '소나기',       icon: '🌦' },
-  95: { label: '뇌우',         icon: '⛈' },
+// WMO 날씨 코드 → 한국어/영어 레이블 + 아이콘
+export const WMO_CODES: Record<number, { label: string; labelEn: string; icon: string }> = {
+  0:  { label: '맑음',         labelEn: 'Clear Sky',           icon: '☀️' },
+  1:  { label: '대체로 맑음',   labelEn: 'Mainly Clear',        icon: '🌤' },
+  2:  { label: '부분적 흐림',   labelEn: 'Partly Cloudy',       icon: '⛅️' },
+  3:  { label: '흐림',         labelEn: 'Overcast',            icon: '☁️' },
+  45: { label: '안개',         labelEn: 'Fog',                 icon: '🌫' },
+  48: { label: '결빙 안개',     labelEn: 'Icy Fog',             icon: '🌫' },
+  51: { label: '가벼운 이슬비', labelEn: 'Light Drizzle',       icon: '🌦' },
+  61: { label: '약한 비',      labelEn: 'Slight Rain',         icon: '🌧' },
+  63: { label: '비',           labelEn: 'Rain',                icon: '🌧' },
+  65: { label: '강한 비',      labelEn: 'Heavy Rain',          icon: '⛈' },
+  71: { label: '약한 눈',      labelEn: 'Slight Snow',         icon: '🌨' },
+  73: { label: '눈',           labelEn: 'Snow',                icon: '❄️' },
+  75: { label: '강한 눈',      labelEn: 'Heavy Snow',          icon: '❄️' },
+  80: { label: '소나기',       labelEn: 'Showers',             icon: '🌦' },
+  95: { label: '뇌우',         labelEn: 'Thunderstorm',        icon: '⛈' },
 };
 
 function formatDate(date: Date): string {

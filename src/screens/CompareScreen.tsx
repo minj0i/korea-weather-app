@@ -6,6 +6,7 @@ import {
 import { fetchHistoricalWeather, WeatherResult, WMO_CODES } from '../services/weatherApi';
 import { Colors } from '../constants/theme';
 import { trackCompareTapped, trackCompareViewed } from '../services/amplitude';
+import { useSettings } from '../context/SettingsContext';
 import type { City } from '../constants/cities';
 
 interface Props {
@@ -68,18 +69,14 @@ function CompareRow({
 }
 
 export function CompareScreen({ city, date, onBack }: Props) {
+  const { t, language } = useSettings();
   const [result, setResult] = useState<CompareData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const compareDate = getCompareDate(date);
-
-  const pastLabel = date.toLocaleDateString('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  });
-  const recentLabel = compareDate.toLocaleDateString('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  });
+  const locale = language === 'en' ? 'en-US' : 'ko-KR';
+  const cityName = language === 'en' ? city.nameEn : city.name;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,7 +103,7 @@ export function CompareScreen({ city, date, onBack }: Props) {
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>두 날짜 데이터를 불러오는 중…</Text>
+          <Text style={styles.loadingText}>{t('calendar_loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -117,9 +114,9 @@ export function CompareScreen({ city, date, onBack }: Props) {
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
           <Text style={styles.errorIcon}>⚠️</Text>
-          <Text style={styles.errorText}>{error ?? '데이터를 찾을 수 없어요'}</Text>
+          <Text style={styles.errorText}>{error ?? t('weather_error')}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={load}>
-            <Text style={styles.retryText}>다시 시도</Text>
+            <Text style={styles.retryText}>{t('weather_retry')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -127,14 +124,40 @@ export function CompareScreen({ city, date, onBack }: Props) {
   }
 
   const { past, recent } = result;
-  const pastWmo = WMO_CODES[past.daily.weatherCode] ?? { label: '알 수 없음', icon: '🌡' };
-  const recentWmo = WMO_CODES[recent.daily.weatherCode] ?? { label: '알 수 없음', icon: '🌡' };
+  const unknown = language === 'en' ? 'Unknown' : '알 수 없음';
+  const _pastWmo = WMO_CODES[past.daily.weatherCode];
+  const pastWmo = {
+    icon:  _pastWmo?.icon  ?? '🌡',
+    label: _pastWmo ? (language === 'en' ? _pastWmo.labelEn : _pastWmo.label) : unknown,
+  };
+  const _recentWmo = WMO_CODES[recent.daily.weatherCode];
+  const recentWmo = {
+    icon:  _recentWmo?.icon  ?? '🌡',
+    label: _recentWmo ? (language === 'en' ? _recentWmo.labelEn : _recentWmo.label) : unknown,
+  };
   const pastAvgHumidity = Math.round(
     past.hourly.humidity.reduce((a, b) => a + b, 0) / past.hourly.humidity.length,
   );
   const recentAvgHumidity = Math.round(
     recent.hourly.humidity.reduce((a, b) => a + b, 0) / recent.hourly.humidity.length,
   );
+
+  // Locale-aware date parts
+  const pastYear = date.toLocaleDateString(locale, { year: 'numeric' });
+  const pastMd   = date.toLocaleDateString(locale, { month: 'long', day: 'numeric' });
+  const recentYear = compareDate.toLocaleDateString(locale, { year: 'numeric' });
+  const recentMd   = compareDate.toLocaleDateString(locale, { month: 'long', day: 'numeric' });
+
+  // Summary text
+  const diff = +(recent.daily.tempMax - past.daily.tempMax).toFixed(1);
+  let summaryText: string;
+  if (diff > 0) {
+    summaryText = `${recentYear} ${t('compare_hotter').replace('{diff}', String(diff))}`;
+  } else if (diff < 0) {
+    summaryText = `${pastYear} ${t('compare_hotter').replace('{diff}', String(Math.abs(diff)))}`;
+  } else {
+    summaryText = t('compare_same');
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -143,29 +166,25 @@ export function CompareScreen({ city, date, onBack }: Props) {
         {/* 네비 */}
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Text style={styles.backIcon}>‹</Text>
-          <Text style={styles.backText}>돌아가기</Text>
+          <Text style={styles.backText}>{t('weather_back')}</Text>
         </TouchableOpacity>
 
         {/* 제목 */}
         <View style={styles.titleSection}>
-          <Text style={styles.title}>📊 날씨 비교</Text>
-          <Text style={styles.subtitle}>{city.name} · 같은 날 비교</Text>
+          <Text style={styles.title}>{t('compare_title')}</Text>
+          <Text style={styles.subtitle}>{cityName} · {t('compare_subtitle')}</Text>
         </View>
 
         {/* 날짜 헤더 */}
         <View style={styles.dateHeader}>
           <View style={styles.dateHeaderCol}>
-            <Text style={styles.dateHeaderYear}>{date.getFullYear()}년</Text>
-            <Text style={styles.dateHeaderMd}>
-              {date.getMonth() + 1}월 {date.getDate()}일
-            </Text>
+            <Text style={styles.dateHeaderYear}>{pastYear}</Text>
+            <Text style={styles.dateHeaderMd}>{pastMd}</Text>
           </View>
-          <Text style={styles.vsText}>VS</Text>
+          <Text style={styles.vsText}>{t('compare_vs')}</Text>
           <View style={[styles.dateHeaderCol, { alignItems: 'flex-end' }]}>
-            <Text style={styles.dateHeaderYear}>{compareDate.getFullYear()}년</Text>
-            <Text style={styles.dateHeaderMd}>
-              {compareDate.getMonth() + 1}월 {compareDate.getDate()}일
-            </Text>
+            <Text style={styles.dateHeaderYear}>{recentYear}</Text>
+            <Text style={styles.dateHeaderMd}>{recentMd}</Text>
           </View>
         </View>
 
@@ -183,42 +202,42 @@ export function CompareScreen({ city, date, onBack }: Props) {
 
         {/* 지표 비교 카드 */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>상세 비교</Text>
+          <Text style={styles.cardTitle}>{t('compare_detail')}</Text>
 
           <View style={styles.cardHeaderRow}>
-            <Text style={styles.cardColLabel}>{date.getFullYear()}</Text>
+            <Text style={styles.cardColLabel}>{pastYear}</Text>
             <View style={styles.cardColMid} />
-            <Text style={styles.cardColLabel}>{compareDate.getFullYear()}</Text>
+            <Text style={styles.cardColLabel}>{recentYear}</Text>
           </View>
 
           <View style={styles.divider} />
 
           <CompareRow
-            icon="🌡" label="최고 기온"
+            icon="🌡" label={t('compare_temp_max')}
             pastVal={past.daily.tempMax}
             recentVal={recent.daily.tempMax}
             unit="°"
           />
           <CompareRow
-            icon="🌡" label="최저 기온"
+            icon="🌡" label={t('compare_temp_min')}
             pastVal={past.daily.tempMin}
             recentVal={recent.daily.tempMin}
             unit="°"
           />
           <CompareRow
-            icon="💧" label="강수량"
+            icon="💧" label={t('compare_precip')}
             pastVal={past.daily.precipitation}
             recentVal={recent.daily.precipitation}
             unit="mm"
           />
           <CompareRow
-            icon="💨" label="최대 풍속"
+            icon="💨" label={t('compare_wind')}
             pastVal={past.daily.windspeedMax}
             recentVal={recent.daily.windspeedMax}
             unit="km/h"
           />
           <CompareRow
-            icon="🌊" label="평균 습도"
+            icon="🌊" label={t('compare_humidity')}
             pastVal={pastAvgHumidity}
             recentVal={recentAvgHumidity}
             unit="%"
@@ -227,14 +246,8 @@ export function CompareScreen({ city, date, onBack }: Props) {
 
         {/* 한줄 요약 */}
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>한줄 요약</Text>
-          <Text style={styles.summaryText}>
-            {recent.daily.tempMax > past.daily.tempMax
-              ? `${compareDate.getFullYear()}년이 ${(recent.daily.tempMax - past.daily.tempMax).toFixed(1)}° 더 더웠어요 🥵`
-              : recent.daily.tempMax < past.daily.tempMax
-              ? `${date.getFullYear()}년이 ${(past.daily.tempMax - recent.daily.tempMax).toFixed(1)}° 더 더웠어요 🥵`
-              : '두 해 최고 기온이 같아요 😲'}
-          </Text>
+          <Text style={styles.summaryTitle}>{t('compare_summary')}</Text>
+          <Text style={styles.summaryText}>{summaryText}</Text>
         </View>
 
       </ScrollView>

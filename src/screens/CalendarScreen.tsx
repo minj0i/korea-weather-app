@@ -6,6 +6,7 @@ import {
 import { CITIES, City } from '../constants/cities';
 import { fetchHistoricalWeather, WMO_CODES } from '../services/weatherApi';
 import { CitySelector } from '../components/CitySelector';
+import { useSettings } from '../context/SettingsContext';
 import { Colors } from '../constants/theme';
 import {
   trackCalendarMonthViewed,
@@ -34,15 +35,16 @@ function formatDate(year: number, month: number, day: number) {
 }
 
 export function CalendarScreen() {
+  const { t, language, defaultCity } = useSettings();
   const today = new Date();
-  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
+  const [selectedCity, setSelectedCity] = useState<City>(defaultCity);
   const [year, setYear]   = useState(today.getFullYear() - 1);
   const [month, setMonth] = useState(today.getMonth());
   const [dayDataMap, setDayDataMap] = useState<Record<string, DayData>>({});
   const [loading, setLoading] = useState(false);
   const [selectedDay, setSelectedDay] = useState<DayData | null>(null);
 
-  const monthLabel = new Date(year, month).toLocaleDateString('ko-KR', {
+  const monthLabel = new Date(year, month).toLocaleDateString(language === 'en' ? 'en-US' : 'ko-KR', {
     year: 'numeric', month: 'long',
   });
 
@@ -136,7 +138,7 @@ export function CalendarScreen() {
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
         <View style={styles.header}>
-          <Text style={styles.title}>📅 월간 달력</Text>
+          <Text style={styles.title}>{t('calendar_title')}</Text>
         </View>
 
         {/* 도시 선택 */}
@@ -226,9 +228,13 @@ export function CalendarScreen() {
 
         {/* 선택된 날 상세 */}
         {selectedDay && (() => {
-          const wmo = WMO_CODES[selectedDay.weatherCode] ?? { icon: '🌡', label: '알 수 없음' };
+          const _wmo = WMO_CODES[selectedDay.weatherCode];
+          const wmo = {
+            icon:  _wmo?.icon  ?? '🌡',
+            label: _wmo ? (language === 'en' ? _wmo.labelEn : _wmo.label) : (language === 'en' ? 'Unknown' : '알 수 없음'),
+          };
           const dateLabel = new Date(year, month, selectedDay.date)
-            .toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+            .toLocaleDateString(language === 'en' ? 'en-US' : 'ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
           return (
             <View style={styles.detailCard}>
               <Text style={styles.detailIcon}>{wmo.icon}</Text>
@@ -236,7 +242,7 @@ export function CalendarScreen() {
                 <Text style={styles.detailDate}>{dateLabel}</Text>
                 <Text style={styles.detailLabel}>{wmo.label}</Text>
                 <Text style={styles.detailSub}>
-                  강수 {selectedDay.precipitation}mm
+                  {language === 'en' ? 'Rain' : '강수'} {selectedDay.precipitation}mm
                 </Text>
               </View>
               <View style={styles.detailTemp}>
@@ -253,17 +259,17 @@ export function CalendarScreen() {
             <View style={styles.summaryItem}>
               <Text style={styles.summaryIcon}>🌡</Text>
               <Text style={styles.summaryValue}>{monthMaxTemp}°</Text>
-              <Text style={styles.summaryLabel}>월 최고</Text>
+              <Text style={styles.summaryLabel}>{t('calendar_month_max')}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryIcon}>💧</Text>
               <Text style={styles.summaryValue}>{monthTotalRain}mm</Text>
-              <Text style={styles.summaryLabel}>월 강수량</Text>
+              <Text style={styles.summaryLabel}>{t('calendar_month_rain')}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryIcon}>☀️</Text>
               <Text style={styles.summaryValue}>{sunnyDays}일</Text>
-              <Text style={styles.summaryLabel}>맑은 날</Text>
+              <Text style={styles.summaryLabel}>{t('calendar_sunny')}</Text>
             </View>
           </View>
         )}
