@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { CITIES, City } from '../constants/cities';
-import { trackCitySelected } from '../services/amplitude';
+import { trackCitySelected, trackMoreCitiesToggled } from '../services/amplitude';
+import { useSettings } from '../context/SettingsContext';
 import { Colors } from '../constants/theme';
 
-// 기본 노출: 서울 + 6대 광역시 + 제주
 const DEFAULT_CITY_IDS = [
   'seoul', 'busan', 'daegu', 'incheon', 'gwangju', 'daejeon', 'ulsan', 'jeju',
 ];
@@ -19,9 +19,14 @@ interface Props {
 }
 
 export function CitySelector({ selected, onSelect, screen }: Props) {
+  const { language, t } = useSettings();
   const [expanded, setExpanded] = useState(false);
 
   const visibleCities = expanded ? [...DEFAULT_CITIES, ...MORE_CITIES] : DEFAULT_CITIES;
+
+  function getCityName(city: City) {
+    return language === 'en' ? city.nameEn : city.name;
+  }
 
   function handleSelect(city: City) {
     onSelect(city);
@@ -35,76 +40,45 @@ export function CitySelector({ selected, onSelect, screen }: Props) {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.grid}>
-        {visibleCities.map(city => (
-          <TouchableOpacity
-            key={city.id}
-            style={[styles.chip, selected.id === city.id && styles.chipActive]}
-            onPress={() => handleSelect(city)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: selected.id === city.id }}
-          >
-            <Text style={[styles.chipText, selected.id === city.id && styles.chipTextActive]}>
-              {city.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-
+    <View style={styles.grid}>
+      {visibleCities.map(city => (
         <TouchableOpacity
-          style={styles.moreBtn}
-          onPress={handleToggle}
+          key={city.id}
+          style={[styles.chip, selected.id === city.id && styles.chipActive]}
+          onPress={() => handleSelect(city)}
           accessibilityRole="button"
+          accessibilityState={{ selected: selected.id === city.id }}
         >
-          <Text style={styles.moreBtnText}>
-            {expanded ? '▲ 접기' : '＋ 더보기'}
+          <Text style={[styles.chipText, selected.id === city.id && styles.chipTextActive]}>
+            {getCityName(city)}
           </Text>
         </TouchableOpacity>
-      </View>
+      ))}
+
+      <TouchableOpacity style={styles.moreBtn} onPress={handleToggle} accessibilityRole="button">
+        <Text style={styles.moreBtnText}>
+          {expanded ? t('home_collapse') : t('home_more')}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {},
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    paddingVertical: 8, paddingHorizontal: 16,
+    borderRadius: 20, borderWidth: 1.5,
+    borderColor: Colors.border, backgroundColor: Colors.surface,
   },
-  chipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: Colors.textSecondary,
-  },
-  chipTextActive: {
-    color: '#fff',
-    fontWeight: '700',
-  },
+  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  chipText:       { fontSize: 13, fontWeight: '500', color: Colors.textSecondary },
+  chipTextActive: { color: '#fff', fontWeight: '700' },
   moreBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderStyle: 'dashed',
+    paddingVertical: 8, paddingHorizontal: 16,
+    borderRadius: 20, borderWidth: 1.5,
+    borderColor: Colors.border, borderStyle: 'dashed',
     backgroundColor: 'transparent',
   },
-  moreBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
+  moreBtnText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
 });

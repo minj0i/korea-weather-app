@@ -23,7 +23,7 @@ function AppContent() {
   const [screen, setScreen] = useState<Screen>('home');
   const [params, setParams] = useState<WeatherParams | null>(null);
 
-  useEffect(() => { initAmplitude(); }, []);
+  useEffect(() => { initAmplitude().catch(console.warn); }, []);
 
   function handleSearch(city: City, date: Date) {
     setParams({ city, date });

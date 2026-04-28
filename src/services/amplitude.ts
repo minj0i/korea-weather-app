@@ -1,8 +1,13 @@
 import * as amplitude from '@amplitude/analytics-react-native';
 import { AMPLITUDE_API_KEY } from '@env';
 
-export function initAmplitude() {
-  amplitude.init(AMPLITUDE_API_KEY);
+export async function initAmplitude() {
+  try {
+    await amplitude.init(AMPLITUDE_API_KEY).promise;
+    console.log('[Amplitude] init success');
+  } catch (e) {
+    console.warn('[Amplitude] init failed:', e);
+  }
 }
 
 // ─── 이벤트 이름 상수 ────────────────────────────────────────────

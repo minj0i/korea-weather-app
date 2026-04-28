@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { CITIES, City } from '../constants/cities';
 import { trackDateChanged } from '../services/amplitude';
 import { CitySelector } from '../components/CitySelector';
+import { useSettings } from '../context/SettingsContext';
 import { Colors } from '../constants/theme';
 
 interface Props {
@@ -14,7 +15,8 @@ interface Props {
 }
 
 export function HomeScreen({ onSearch }: Props) {
-  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
+  const { t, language, defaultCity } = useSettings();
+  const [selectedCity, setSelectedCity] = useState<City>(defaultCity);
   const [date, setDate] = useState(() => {
     const d = new Date();
     d.setFullYear(d.getFullYear() - 1);
@@ -34,9 +36,10 @@ export function HomeScreen({ onSearch }: Props) {
     }
   }
 
-  const formattedDate = date.toLocaleDateString('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  });
+  const formattedDate = date.toLocaleDateString(
+    language === 'en' ? 'en-US' : 'ko-KR',
+    { year: 'numeric', month: 'long', day: 'numeric' },
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -44,24 +47,21 @@ export function HomeScreen({ onSearch }: Props) {
       <ScrollView contentContainerStyle={styles.container}>
 
         <View style={styles.header}>
-          <Text style={styles.title}>🌤 과거 날씨</Text>
-          <Text style={styles.subtitle}>대한민국 과거 날씨를 검색해보세요</Text>
+          <Text style={styles.title}>{t('home_title')}</Text>
+          <Text style={styles.subtitle}>{t('home_subtitle')}</Text>
         </View>
 
-        {/* 도시 선택 */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>도시 선택</Text>
+          <Text style={styles.sectionLabel}>{t('home_city')}</Text>
           <CitySelector selected={selectedCity} onSelect={setSelectedCity} screen="search" />
         </View>
 
-        {/* 날짜 선택 */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>날짜 선택</Text>
+          <Text style={styles.sectionLabel}>{t('home_date')}</Text>
           <TouchableOpacity
             style={styles.datePicker}
             onPress={() => setShowPicker(true)}
             accessibilityRole="button"
-            accessibilityLabel={`날짜 선택: ${formattedDate}`}
           >
             <Text style={styles.dateIcon}>📅</Text>
             <Text style={styles.dateText}>{formattedDate}</Text>
@@ -75,7 +75,7 @@ export function HomeScreen({ onSearch }: Props) {
               onChange={handleDateChange}
               maximumDate={maxDate}
               minimumDate={minDate}
-              locale="ko-KR"
+              locale={language === 'en' ? 'en-US' : 'ko-KR'}
               textColor="#FFFFFF"
               themeVariant="dark"
             />
@@ -87,7 +87,7 @@ export function HomeScreen({ onSearch }: Props) {
           onPress={() => onSearch(selectedCity, date)}
           accessibilityRole="button"
         >
-          <Text style={styles.searchButtonText}>날씨 조회하기</Text>
+          <Text style={styles.searchButtonText}>{t('home_search')}</Text>
         </TouchableOpacity>
 
       </ScrollView>
@@ -99,9 +99,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   container: { padding: 24, gap: 28 },
   header: { marginTop: 16, gap: 6 },
-  title: { fontSize: 28, fontWeight: '700', color: Colors.textPrimary },
+  title:    { fontSize: 28, fontWeight: '700', color: Colors.textPrimary },
   subtitle: { fontSize: 15, color: Colors.textSecondary },
-  section: { gap: 12 },
+  section:  { gap: 12 },
   sectionLabel: {
     fontSize: 13, fontWeight: '600', color: Colors.textSecondary,
     letterSpacing: 0.5, textTransform: 'uppercase',
@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: 14,
     padding: 16, borderWidth: 1.5, borderColor: Colors.border, gap: 12,
   },
-  dateIcon: { fontSize: 20 },
-  dateText: { flex: 1, fontSize: 16, fontWeight: '500', color: Colors.textPrimary },
+  dateIcon:  { fontSize: 20 },
+  dateText:  { flex: 1, fontSize: 16, fontWeight: '500', color: Colors.textPrimary },
   dateArrow: { fontSize: 22, color: Colors.textSecondary },
   searchButton: {
     backgroundColor: Colors.primary, borderRadius: 16,
