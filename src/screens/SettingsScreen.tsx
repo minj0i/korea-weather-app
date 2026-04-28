@@ -11,7 +11,7 @@ import { trackTabViewed } from '../services/amplitude';
 const APP_VERSION = '1.0.0';
 
 export function SettingsScreen() {
-  const { t, language, setLanguage, tempUnit, setTempUnit, defaultCity, setDefaultCity } = useSettings();
+  const { t, language, setLanguage, tempUnit, setTempUnit, defaultCity, setDefaultCity, formatTemp } = useSettings();
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -122,11 +122,7 @@ export function SettingsScreen() {
           <View style={styles.previewRow}>
             {[-10, 0, 15, 25, 35].map(c => (
               <View key={c} style={styles.previewItem}>
-                <Text style={styles.previewCelsius}>{c}°C</Text>
-                <Text style={styles.previewArrow}>↓</Text>
-                <Text style={styles.previewConverted}>
-                  {tempUnit === 'F' ? `${Math.round(c * 9 / 5 + 32)}°F` : `${c}°C`}
-                </Text>
+                <Text style={styles.previewTemp}>{formatTemp(c)}</Text>
               </View>
             ))}
           </View>
@@ -196,9 +192,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   previewLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  previewRow:   { flexDirection: 'row', justifyContent: 'space-between' },
-  previewItem:  { alignItems: 'center', gap: 4 },
-  previewCelsius:   { fontSize: 11, color: Colors.textSecondary },
-  previewArrow:     { fontSize: 10, color: Colors.border },
-  previewConverted: { fontSize: 13, fontWeight: '700', color: Colors.accent },
+  previewRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  previewItem:  { alignItems: 'center' },
+  previewTemp:  { fontSize: 15, fontWeight: '700', color: Colors.accent },
 });
