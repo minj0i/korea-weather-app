@@ -19,9 +19,10 @@ interface Props {
   city: City;
   date: Date;
   onBack: () => void;
+  onCompare: () => void;
 }
 
-export function WeatherScreen({ city, date, onBack }: Props) {
+export function WeatherScreen({ city, date, onBack, onCompare }: Props) {
   const [data, setData] = useState<WeatherResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,7 +144,7 @@ export function WeatherScreen({ city, date, onBack }: Props) {
         {/* 오늘과 비교 CTA */}
         <TouchableOpacity
           style={styles.compareBtn}
-          onPress={() => trackCompareTapped(city.name, data.daily.date)}
+          onPress={onCompare}
         >
           <Text style={styles.compareBtnText}>📊 올해 같은 날과 비교하기</Text>
         </TouchableOpacity>
