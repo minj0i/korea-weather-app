@@ -6,7 +6,7 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { WeatherScreen } from './src/screens/WeatherScreen';
 import { CompareScreen } from './src/screens/CompareScreen';
 import { CalendarScreen } from './src/screens/CalendarScreen';
-import { initAmplitude } from './src/services/amplitude';
+import { initAmplitude, trackTabViewed } from './src/services/amplitude';
 import { Colors } from './src/constants/theme';
 import type { City } from './src/constants/cities';
 
@@ -65,7 +65,7 @@ export default function App() {
       <View style={styles.tabBar}>
         <TouchableOpacity
           style={styles.tabItem}
-          onPress={() => { setTab('search'); setScreen('home'); }}
+          onPress={() => { setTab('search'); setScreen('home'); trackTabViewed('search'); }}
           accessibilityRole="button"
         >
           <Text style={styles.tabIcon}>{tab === 'search' ? '🔍' : '🔎'}</Text>
@@ -77,7 +77,7 @@ export default function App() {
 
         <TouchableOpacity
           style={styles.tabItem}
-          onPress={() => setTab('calendar')}
+          onPress={() => { setTab('calendar'); trackTabViewed('calendar'); }}
           accessibilityRole="button"
         >
           <Text style={styles.tabIcon}>📅</Text>

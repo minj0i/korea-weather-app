@@ -51,7 +51,7 @@ export function HomeScreen({ onSearch }: Props) {
         {/* 도시 선택 */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>도시 선택</Text>
-          <CitySelector selected={selectedCity} onSelect={setSelectedCity} />
+          <CitySelector selected={selectedCity} onSelect={setSelectedCity} screen="search" />
         </View>
 
         {/* 날짜 선택 */}

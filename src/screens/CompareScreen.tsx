@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { fetchHistoricalWeather, WeatherResult, WMO_CODES } from '../services/weatherApi';
 import { Colors } from '../constants/theme';
-import { trackCompareTapped } from '../services/amplitude';
+import { trackCompareTapped, trackCompareViewed } from '../services/amplitude';
 import type { City } from '../constants/cities';
 
 interface Props {
@@ -91,6 +91,7 @@ export function CompareScreen({ city, date, onBack }: Props) {
       ]);
       setResult({ past, recent });
       trackCompareTapped(city.name, past.daily.date);
+      trackCompareViewed(city.name, past.daily.date, recent.daily.date);
     } catch (e) {
       setError((e as Error).message);
     } finally {

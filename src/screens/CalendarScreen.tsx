@@ -7,6 +7,11 @@ import { CITIES, City } from '../constants/cities';
 import { fetchHistoricalWeather, WMO_CODES } from '../services/weatherApi';
 import { CitySelector } from '../components/CitySelector';
 import { Colors } from '../constants/theme';
+import {
+  trackCalendarMonthViewed,
+  trackCalendarMonthChanged,
+  trackCalendarDaySelected,
+} from '../services/amplitude';
 
 const DAYS_OF_WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -83,6 +88,7 @@ export function CalendarScreen() {
         };
       });
       setDayDataMap(map);
+      trackCalendarMonthViewed(selectedCity.name, year, month);
     } catch (e) {
       console.error(e);
     } finally {
@@ -93,14 +99,20 @@ export function CalendarScreen() {
   useEffect(() => { loadMonth(); }, [loadMonth]);
 
   function prevMonth() {
-    if (month === 0) { setYear(y => y - 1); setMonth(11); }
-    else setMonth(m => m - 1);
+    const newYear  = month === 0 ? year - 1 : year;
+    const newMonth = month === 0 ? 11 : month - 1;
+    setYear(newYear);
+    setMonth(newMonth);
+    trackCalendarMonthChanged(selectedCity.name, newYear, newMonth, 'prev');
   }
   function nextMonth() {
     const next = new Date(year, month + 1);
-    if (next >= today) return; // 미래 월 이동 불가
-    if (month === 11) { setYear(y => y + 1); setMonth(0); }
-    else setMonth(m => m + 1);
+    if (next >= today) return;
+    const newYear  = month === 11 ? year + 1 : year;
+    const newMonth = month === 11 ? 0 : month + 1;
+    setYear(newYear);
+    setMonth(newMonth);
+    trackCalendarMonthChanged(selectedCity.name, newYear, newMonth, 'next');
   }
 
   // 월 통계
@@ -128,7 +140,7 @@ export function CalendarScreen() {
         </View>
 
         {/* 도시 선택 */}
-        <CitySelector selected={selectedCity} onSelect={setSelectedCity} />
+        <CitySelector selected={selectedCity} onSelect={setSelectedCity} screen="calendar" />
 
         {/* 월 이동 */}
         <View style={styles.monthNav}>
@@ -177,7 +189,16 @@ export function CalendarScreen() {
                     <TouchableOpacity
                       key={col}
                       style={[styles.dayCell, isSelected && styles.dayCellSelected]}
-                      onPress={() => setSelectedDay(data ?? null)}
+                      onPress={() => {
+                      setSelectedDay(data ?? null);
+                      if (data) trackCalendarDaySelected(
+                        selectedCity.name,
+                        key,
+                        data.weatherCode,
+                        data.tempMax,
+                        data.tempMin,
+                      );
+                    }}
                       activeOpacity={0.7}
                     >
                       <Text style={[

@@ -12,6 +12,7 @@ import {
   trackWeatherSearch,
   trackHourlyExpanded,
   trackCompareTapped,
+  trackWeatherShared,
 } from '../services/amplitude';
 import type { City } from '../constants/cities';
 
@@ -60,6 +61,7 @@ export function WeatherScreen({ city, date, onBack, onCompare }: Props) {
     await Share.share({
       message: `${city.name} ${dateStr}\n${wmo.icon} ${wmo.label}\n최고 ${data.daily.tempMax}°C / 최저 ${data.daily.tempMin}°C\n강수 ${data.daily.precipitation}mm`,
     });
+    trackWeatherShared(city.name, data.daily.date);
   }
 
   if (loading) {

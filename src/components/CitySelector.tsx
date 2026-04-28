@@ -15,16 +15,23 @@ const MORE_CITIES    = CITIES.filter(c => !DEFAULT_CITY_IDS.includes(c.id));
 interface Props {
   selected: City;
   onSelect: (city: City) => void;
+  screen: 'search' | 'calendar';
 }
 
-export function CitySelector({ selected, onSelect }: Props) {
+export function CitySelector({ selected, onSelect, screen }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   const visibleCities = expanded ? [...DEFAULT_CITIES, ...MORE_CITIES] : DEFAULT_CITIES;
 
   function handleSelect(city: City) {
     onSelect(city);
-    trackCitySelected(city.name);
+    trackCitySelected(city.name, screen);
+  }
+
+  function handleToggle() {
+    const next = !expanded;
+    setExpanded(next);
+    trackMoreCitiesToggled(next, screen);
   }
 
   return (
@@ -46,7 +53,7 @@ export function CitySelector({ selected, onSelect }: Props) {
 
         <TouchableOpacity
           style={styles.moreBtn}
-          onPress={() => setExpanded(prev => !prev)}
+          onPress={handleToggle}
           accessibilityRole="button"
         >
           <Text style={styles.moreBtnText}>
